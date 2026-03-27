@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能水杯配套软件</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4757;
+            box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+        }
+
+        .status-dot.connected {
+            background: #2ed573;
+            box-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
+        }
+
+        .cup-icon {
+            font-size: 24px;
+        }
+
+        /* 语言选择按钮 */
+        .language-selector-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+        }
+
+        .language-selector-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .language-selector-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 语言选择弹窗 */
+        .language-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .language-modal.active {
+            display: flex;
+        }
+
+        .language-modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 350px;
+            padding: 25px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .modal-close {
+            background: #e0e0e0;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: #d0d0d0;
+        }
+
+        .language-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .language-option {
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid transparent;
+        }
+
+        .language-option:hover {
+            background: #f5f5f5;
+        }
+
+        .language-option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .language-option .lang-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .language-option .lang-name {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .language-option .check-mark {
+            font-size: 20px;
+        }
+
+        /* 主页内容 */
+        #mainPage {
+            padding: 20px;
+        }
+
+        /* 首页余水量圆环显示 */
+        .water-level-display {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .water-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: conic-gradient(#4CAF50 0%, #4CAF50 var(--water-percent), #e0e0e0 var(--water-percent), #e0e0e0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+        }
+
+        .water-circle::before {
+            content: '';
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .water-circle-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .water-percent {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4CAF50;
+            line-height: 1;
+        }
+
+        .water-percent::after {
+            content: '%';
+            font-size: 28px;
+            color: #7f8c8d;
+        }
+
+        .water-volume {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 5px;
+        }
+
+        .water-volume::after {
+            content: 'ml';
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-left: 3px;
+        }
+
+        .water-label {
+            font-size: 16px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* 余水量页面动画效果 */
+        .water-animation-container {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .water-cup {
+            width: 200px;
+            height: 250px;
+            margin: 0 auto 20px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px 10px 20px 20px;
+            border: 3px solid #ddd;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .water-cup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px 10px 0 0;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .water {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 44%;
+            background: linear-gradient(180deg, rgba(76, 175, 80, 0.8) 0%, rgba(56, 142, 60, 0.9) 100%);
+            transition: height 0.5s ease;
+            animation: waterWave 3s ease-in-out infinite;
+        }
+
+        .water::before,
+        .water::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 30px;
+            top: -15px;
+            left: -50%;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 45%;
+            animation: waveMove 3s linear infinite;
+        }
+
+        .water::after {
+            top: -20px;
+            animation: waveMove 4s linear infinite reverse;
+        }
+
+        @keyframes waterWave {
+            0%, 100% {
+                height: 44%;
+            }
+            50% {
+                height: 46%;
+            }
+        }
+
+        @keyframes waveMove {
+            0% {
+                transform: translateX(0) rotate(0deg);
+            }
+            50% {
+                transform: translateX(-25%) rotate(5deg);
+            }
+            100% {
+                transform: translateX(0) rotate(0deg);
+            }
+        }
+
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: bubbleRise 4s ease-in-out infinite;
+        }
+
+        .bubble:nth-child(1) {
+            width: 8px;
+            height: 8px;
+            left: 20%;
+            animation-delay: 0s;
+        }
+
+        .bubble:nth-child(2) {
+            width: 12px;
+            height: 12px;
+            left: 40%;
+            animation-delay: 1s;
+        }
+
+        .bubble:nth-child(3) {
+            width: 6px;
+            height: 6px;
+            left: 60%;
+            animation-delay: 2s;
+        }
+
+        .bubble:nth-child(4) {
+            width: 10px;
+            height: 10px;
+            left: 80%;
+            animation-delay: 3s;
+        }
+
+        @keyframes bubbleRise {
+            0% {
+                bottom: 10%;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 95%;
+                opacity: 0;
+            }
+        }
+
+        .water-info-large {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .water-percent-large {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4CAF50;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .water-percent-large::after {
+            content: '%';
+            font-size: 28px;
+            color: #7f8c8d;
+        }
+
+        .water-volume-large {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .water-volume-large::after {
+            content: 'ml';
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-left: 3px;
+        }
+
+        .water-capacity {
+            font-size: 16px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .water-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .water-stat-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .water-stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .water-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        /* 数据统计 */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        /* 功能按钮 */
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .function-btn {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .function-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .function-btn:active {
+            transform: scale(0.95);
+        }
+
+        .function-btn .icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .function-btn .label {
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+        }
+
+        /* 页面容器 */
+        .page-container {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 页面标题 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        .page-title {
+            font-size: 18px;
+            font-weight: bold;
+            flex: 1;
+            text-align: center;
+        }
+
+        /* 卡片 */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        /* 设置项 */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        /* 扫码页面 */
+        .qr-scanner {
+            background: #000;
+            height: 300px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #4CAF50, transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+            100% {
+                top: 100%;
+            }
+        }
+
+        /* 日期选择 */
+        .date-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .date-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: #f5f5f5;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            color: #666;
+            border: none;
+        }
+
+        .date-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* 图表容器 */
+        #drinkingChart {
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        /* 信息标签切换 */
+        .message-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .message-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: #f5f5f5;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .message-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* 消息项 */
+        .message-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-text {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .message-unread {
+            width: 10px;
+            height: 10px;
+            background: #ff4757;
+            border-radius: 50%;
+        }
+
+        /* 发送提醒表单 */
+        .send-form {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .form-button:active {
+            transform: scale(0.98);
+        }
+
+        /* 温度控制 */
+        .temperature-control {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .temp-display-large {
+            font-size: 72px;
+            font-weight: bold;
+            color: #ff6b9d;
+            margin-bottom: 10px;
+        }
+
+        .temp-display-unit {
+            font-size: 36px;
+            color: #666;
+        }
+
+        .temp-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .temp-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .temp-button.up {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        .temp-button.down {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+        }
+
+        .temp-button:active {
+            transform: scale(0.95);
+        }
+
+        .target-temp {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+
+        .target-temp-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .target-temp-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        /* 隐藏内容 */
+        .hidden {
+            display: none;
+        }
+
+        /* 水位动画样式 */
+        .water-animation-container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .water-cup {
+            width: 200px;
+            height: 280px;
+            margin: 20px auto;
+            position: relative;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px 20px 30px 30px;
+            border: 3px solid #dee2e6;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .water {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            transition: height 1.5s ease-in-out;
+            border-radius: 0 0 27px 27px;
+        }
+
+        .water::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 200%;
+            height: 20px;
+            background: inherit;
+            border-radius: 50%;
+            animation: wave 3s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% {
+                transform: translateX(0) translateY(0);
+            }
+            50% {
+                transform: translateX(-25%) translateY(-3px);
+            }
+        }
+
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: bubble 4s ease-in-out infinite;
+        }
+
+        .bubble:nth-child(1) {
+            width: 12px;
+            height: 12px;
+            left: 20%;
+            bottom: 20px;
+            animation-delay: 0s;
+        }
+
+        .bubble:nth-child(2) {
+            width: 8px;
+            height: 8px;
+            left: 40%;
+            bottom: 40px;
+            animation-delay: 1s;
+        }
+
+        .bubble:nth-child(3) {
+            width: 10px;
+            height: 10px;
+            left: 60%;
+            bottom: 30px;
+            animation-delay: 2s;
+        }
+
+        .bubble:nth-child(4) {
+            width: 6px;
+            height: 6px;
+            left: 80%;
+            bottom: 50px;
+            animation-delay: 3s;
+        }
+
+        @keyframes bubble {
+            0%, 100% {
+                transform: translateY(0);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateY(-20px);
+                opacity: 1;
+            }
+        }
+
+        .water-info-large {
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .water-percent-large {
+            font-size: 64px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .water-percent-large::after {
+            content: '%';
+            font-size: 32px;
+            vertical-align: super;
+        }
+
+        .water-volume-large {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .water-volume-large::after {
+            content: 'ml';
+            font-size: 18px;
+            font-weight: normal;
+        }
+
+        .water-capacity {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+
+        .water-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .water-stat-item {
+            padding: 15px 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .water-stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .water-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="connection-status">
+                <div class="cup-icon">🥤</div>
+                <div class="status-dot" id="statusDot"></div>
+                <span id="connectionText">未连接</span>
+            </div>
+            <div class="language-selector-btn" onclick="openLanguageSelector()">
+                <span>🌍</span>
+                <span id="langText">中文</span>
+            </div>
+        </div>
+
+        <!-- 语言选择弹窗 -->
+        <div class="language-modal" id="languageModal">
+            <div class="language-modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">选择语言 / Language</h3>
+                    <button class="modal-close" onclick="closeLanguageSelector()">×</button>
+                </div>
+                <div class="language-options">
+                    <div class="language-option selected" onclick="setLanguage('zh')">
+                        <span class="lang-icon">🇨🇳</span>
+                        <span class="lang-name">中文</span>
+                        <span class="check-mark">✓</span>
+                    </div>
+                    <div class="language-option" onclick="setLanguage('en')">
+                        <span class="lang-icon">🇺🇸</span>
+                        <span class="lang-name">English</span>
+                        <span class="check-mark">✓</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主页 -->
+        <div id="mainPage">
+            <!-- 余水量圆环显示 -->
+            <div class="water-level-display">
+                <div class="water-circle" style="--water-percent: 44%">
+                    <div class="water-circle-inner">
+                        <div class="water-percent">44</div>
+                        <div class="water-volume">350</div>
+                    </div>
+                </div>
+                <div class="water-label" data-lang="currentWaterLevel">当前余水量</div>
+            </div>
+
+            <!-- 功能按钮 -->
+            <div class="function-grid">
+                <button class="function-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)" onclick="showPage('settings')">
+                    <span class="icon">⚙️</span>
+                    <span class="label" data-lang="settings">设置</span>
+                </button>
+                <button class="function-btn" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%)" onclick="showPage('waterLevel')">
+                    <span class="icon">💧</span>
+                    <span class="label" data-lang="waterLevel">余水量</span>
+                </button>
+                <button class="function-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%)" onclick="showPage('curve')">
+                    <span class="icon">📈</span>
+                    <span class="label" data-lang="drinkingCurve">喝水曲线</span>
+                </button>
+                <button class="function-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)" onclick="showPage('suggestion')">
+                    <span class="icon">💡</span>
+                    <span class="label" data-lang="suggestions">喝水建议</span>
+                </button>
+                <button class="function-btn" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)" onclick="showPage('message')">
+                    <span class="icon">📱</span>
+                    <span class="label" data-lang="messages">信息</span>
+                </button>
+                <button class="function-btn" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%)" onclick="showPage('temperature')">
+                    <span class="icon">🌡️</span>
+                    <span class="label" data-lang="temperature">温度</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 设置页面 -->
+        <div id="settingsPage" class="page-container">
+            <div class="page-header">
+                <button class="back-button" onclick="showMain()">←</button>
+                <div class="page-title" data-lang="settings">设置</div>
+            </div>
+            <div class="card">
+                <div class="card-title" data-lang="functionSettings">功能设置</div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>🔔</span>
+                        <span data-lang="mode">模式</span>
+                    </div>
+                    <button class="form-button" style="width: auto; padding: 8px 20px;" onclick="showModeSettings()" data-lang="enter">进入</button>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>📷</span>
+                        <span data-lang="scan">扫一扫</span>
+                    </div>
+                    <button class="form-button" style="width: auto; padding: 8px 20px;" onclick="showScan()" data-lang="enter">进入</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模式设置页面 -->
+        <div id="modeSettingsPage" class="page-container">
+            <div class="page-header">
+                <button class="back-button" onclick="showPage('settings')">←</button>
+                <div class="page-title" data-lang="modeSettings">模式设置</div>
+            </div>
+            <div class="card">
+                <div class="card-title" data-lang="notificationSettings">通知设置</div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>📳</span>
+                        <span data-lang="vibration">振动</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="vibrationSwitch" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>💫</span>
+                        <span data-lang="screenFlash">屏幕闪烁</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="flashSwitch">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>🔔</span>
+                        <span data-lang="ringtone">铃声</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="ringtoneSwitch" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 扫码页面 -->
+        <div id="scanPage" class="page-container">
+            <div class="page-header">
+                <button class="back-button" onclick="showPage('settings')">←</button>
+                <div class="page-title" data-lang="scan">扫一扫</div>
+            </div>
+            <div class="qr-scanner">
+                <div class="scan-line"></div>
+                <span style="color: white; font-size: 48px;">📷</span>
+            </div>
+            <p style="text-align: center; margin-top: 15px; color: #7f8c8d;" data-lang="scanHint">扫描水杯二维码进行连接</p>
+            <button class="form-button" style="margin: 20px;" onclick="showScanResult()" data-lang="scanResult">完成扫描</button>
+        </div>
+
+        <!-- 余水量页面 -->
+        <div id="waterLevelPage" class="page-container">
+            <div class="page-header">
+                <button class="back-button" onclick="showMain()">←</button>
+                <div class="page-title" data-lang="waterLevel">余水量</div>
+            </div>
+            
+            <!-- 动态水位动画 -->
+            <div class="water-animation-container">
+                <div class="water-cup">
+                    <div class="water" style="height: 44%;">
+                        <div class="bubble"></div>
+                        <div class="bubble"></div>
+                        <div class="bubble"></div>
+                        <div class="bubble"></div>
+                    </div>
+                </div>
+                
+                <div class="water-info-large">
+                    <div class="water-percent-large">44</div>
+                    <div class="water-volume-large">350</div>
+                    <div class="water-capacity" data-lang="totalCapacity">总容量 800ml</div>
+                </div>
+                
+                <div class="water-stat-grid">
+                    <div class="water-stat-item">
+                        <div class="water-stat-label" data-lang="currentVolume">当前体积</div>
+                        <div class="water-stat-value">350ml</div>
+                    </div>
+                    <div class="water-stat-item">
+                        <div class="water-stat-label" data-lang="percentage">百分比</div>
+                        <div class="water-stat-value">44%</div>
+                    </div>
+                    <div class="water-stat-item">
+                        <div class="water-stat-label" data-lang="emptySpace">剩余空间</div>
+                        <div class="water-stat-value">450ml</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 喝水曲线页面 -->
+        <div id="curvePage" class="page-container">
+            <div class="page-header">
+                <button class="back-button" onclick="showMain()">←</button>
+                <div class="page-title" data-lang="drinkingCurve">喝水曲线</div>
+            </div>
+            <div class="date-tabs">
+                <button class="date-tab active" onclick="selectDate(this, 'today')" data-lang="today">今天</button>
+                <button class="date-tab" onclick="selectDate(this, 'yesterday')" data-lang="yesterday">昨天</button>
+                <button class="date-tab" onclick="selectDate(this, 'beforeYesterday')" data-lang="dayBeforeYesterday">前天</button>
+            </div>
+            <div id="drinkingChart"></div>
+            <div class="card">
+                <div class="card-title" data-lang="drinkingHistory">饮水记录</div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>08:30</span>
+                    </div>
+                    <div style="color: #4CAF50; font-weight: bold;">50ml</div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>10:15</span>
+                    </div>
+                    <div style="color: #4CAF50; font-weight: bold;">50ml</div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>12:00</span>
+                    </div>
+                    <div style="color: #4CAF50; font-weight: bold;">50ml</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 喝水建议页面 -->
+        <div id="suggestionPage" class="page-container">
+            <div class="page-header">
+                <button class="back-button" onclick="showMain()">←</button>
+                <div class="page-title" data-lang="drinkingSuggestion">喝水建议</div>
+            </div>
+            <div class="card">
+                <div class="card-title" data-lang="nextDrinkTime">下次喝水时间</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 36px; font-weight: bold; color: #2c3e50; margin: 15px 0;" data-lang="drinkTime">15:30</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #4CAF50; margin-bottom: 15px;">200ml</div>
+                    <p style="color: #7f8c8d;" data-lang="suggestionDesc">喝水小助手根据您的喝水曲线为您推荐</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title" data-lang="drinkingTips">喝水小贴士</div>
+                <div style="color: #666; line-height: 1.6; margin-bottom: 10px;">
+                    <span style="font-weight: bold; color: #4CAF50;">1. </span>
+                    <span data-lang="tip1">每天8杯水，约2000ml</span>
+                </div>
+                <div style="color: #666; line-height: 1.6; margin-bottom: 10px;">
+                    <span style="font-weight: bold; color: #4CAF50;">2. </span>
+                    <span data-lang="tip2">空腹喝水有助于消化</span>
+                </div>
+                <div style="color: #666; line-height: 1.6; margin-bottom: 10px;">
+                    <span style="font-weight: bold; color: #4CAF50;">3. </span>
+                    <span data-lang="tip3">睡前1小时不要大量饮水</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 信息页面 -->
+        <div id="messagePage" class="page-container">
+            <div class="page-header">
+                <button class="back-button" onclick="showMain()">←</button>
+                <div class="page-title" data-lang="messages">信息</div>
+            </div>
+            <div class="message-tabs">
+                <div class="message-tab active" onclick="switchMessageTab(this, 'my')" data-lang="myReminders">我的提醒</div>
+                <div class="message-tab" onclick="switchMessageTab(this, 'send')" data-lang="remindOthers">提醒别人</div>
+            </div>
+            <div id="myReminders">
+                <div class="message-item">
+                    <div class="message-content">
+                        <div class="message-text" data-lang="reminderFromMom">妈妈提醒你：该喝水啦！💧</div>
+                        <div class="message-time">10分钟前</div>
+                    </div>
+                    <div class="message-unread"></div>
+                </div>
+                <div class="message-item">
+                    <div class="message-content">
+                        <div class="message-text" data-lang="reminderFromDad">爸爸提醒你：记得多喝水</div>
+                        <div class="message-time">1小时前</div>
+                    </div>
+                </div>
+                <div class="message-item">
+                    <div class="message-content">
+                        <div class="message-text" data-lang="reminderFromFriend">小明提醒你：一起喝水吧！</div>
+                        <div class="message-time">2小时前</div>
+                    </div>
+                </div>
+            </div>
+            <div id="sendReminder" class="hidden">
+                <div class="send-form">
+                    <div style="margin-bottom: 15px; font-weight: bold; color: #333;" data-lang="sendReminder">发送提醒</div>
+                    <input type="text" class="form-input" placeholder="选择联系人">
+                    <textarea class="form-input" rows="4" placeholder="输入提醒内容"></textarea>
+                    <button class="form-button" onclick="sendReminder()" data-lang="sendReminder">发送提醒</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 温度页面 -->
+        <div id="temperaturePage" class="page-container">
+            <div class="page-header">
+                <button class="back-button" onclick="showMain()">←</button>
+                <div class="page-title" data-lang="temperature">温度</div>
+            </div>
+            <div class="card">
+                <div class="temperature-control">
+                    <div class="temp-display-large">
+                        <span id="currentTemp">45</span><span class="temp-display-unit">℃</span>
+                    </div>
+                    <div style="color: #666;" data-lang="currentTemp">当前水温</div>
+                    <div class="temp-controls">
+                        <button class="temp-button up" onclick="changeTemp(1)">+</button>
+                        <button class="temp-button down" onclick="changeTemp(-1)">-</button>
+                    </div>
+                </div>
+                <div class="target-temp">
+                    <div class="target-temp-label" data-lang="targetTemperature">目标温度</div>
+                    <div class="target-temp-value">45℃</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title" data-lang="temperatureHistory">温度历史</div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>08:00</span>
+                    </div>
+                    <div style="color: #ff6b9d; font-weight: bold;">42℃</div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>12:00</span>
+                    </div>
+                    <div style="color: #ff6b9d; font-weight: bold;">45℃</div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <span>15:00</span>
+                    </div>
+                    <div style="color: #ff6b9d; font-weight: bold;">48℃</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 语言资源
+        const i18n = {
+            zh: {
+                waterData: '饮水数据',
+                currentWaterLevel: '当前余水量',
+                todayDrunk: '今日已喝',
+                targetWater: '目标饮水量',
+                settings: '设置',
+                waterLevel: '余水量',
+                drinkingCurve: '喝水曲线',
+                suggestions: '喝水建议',
+                messages: '信息',
+                temperature: '温度',
+                functionSettings: '功能设置',
+                mode: '模式',
+                scan: '扫一扫',
+                enter: '进入',
+                modeSettings: '模式设置',
+                notificationSettings: '通知设置',
+                vibration: '振动',
+                screenFlash: '屏幕闪烁',
+                ringtone: '铃声',
+                scanHint: '扫描水杯二维码进行连接',
+                scanResult: '完成扫描',
+                waterLevelDetails: '余水量详情',
+                currentVolume: '当前体积',
+                percentage: '百分比',
+                cupCapacity: '水杯总容量',
+                today: '今天',
+                yesterday: '昨天',
+                dayBeforeYesterday: '前天',
+                drinkingHistory: '饮水记录',
+                drinkingSuggestion: '喝水建议',
+                nextDrinkTime: '下次喝水时间',
+                drinkTime: '15:30',
+                suggestionDesc: '喝水小助手根据您的喝水曲线为您推荐',
+                drinkingTips: '喝水小贴士',
+                tip1: '每天8杯水，约2000ml',
+                tip2: '空腹喝水有助于消化',
+                tip3: '睡前1小时不要大量饮水',
+                myReminders: '我的提醒',
+                remindOthers: '提醒别人',
+                reminderFromMom: '妈妈提醒你：该喝水啦！💧',
+                reminderFromDad: '爸爸提醒你：记得多喝水',
+                reminderFromFriend: '小明提醒你：一起喝水吧！',
+                sendReminder: '发送提醒',
+                currentTemp: '当前水温',
+                targetTemperature: '目标温度',
+                temperatureHistory: '温度历史',
+                connected: '已连接',
+                notConnected: '未连接'
+            },
+            en: {
+                waterData: 'Drinking Data',
+                currentWaterLevel: 'Current Water Level',
+                todayDrunk: 'Drank Today',
+                targetWater: 'Target Water Intake',
+                settings: 'Settings',
+                waterLevel: 'Water Level',
+                drinkingCurve: 'Drinking Curve',
+                suggestions: 'Suggestions',
+                messages: 'Messages',
+                temperature: 'Temperature',
+                functionSettings: 'Function Settings',
+                mode: 'Mode',
+                scan: 'Scan',
+                enter: 'Enter',
+                modeSettings: 'Mode Settings',
+                notificationSettings: 'Notification Settings',
+                vibration: 'Vibration',
+                screenFlash: 'Screen Flash',
+                ringtone: 'Ringtone',
+                scanHint: 'Scan water cup QR code to connect',
+                scanResult: 'Complete Scan',
+                waterLevelDetails: 'Water Level Details',
+                currentVolume: 'Current Volume',
+                percentage: 'Percentage',
+                cupCapacity: 'Total Capacity',
+                emptySpace: 'Remaining Space',
+                totalCapacity: 'Total Capacity 800ml',
+                today: 'Today',
+                yesterday: 'Yesterday',
+                dayBeforeYesterday: '2 Days Ago',
+                drinkingHistory: 'Drinking History',
+                drinkingSuggestion: 'Drinking Suggestions',
+                nextDrinkTime: 'Next Drink Time',
+                drinkTime: '15:30',
+                suggestionDesc: 'Recommended by drinking assistant based on your curve',
+                drinkingTips: 'Drinking Tips',
+                tip1: '8 glasses of water per day, about 2000ml',
+                tip2: 'Drinking water on an empty stomach aids digestion',
+                tip3: 'Avoid drinking large amounts of water 1 hour before bedtime',
+                myReminders: 'My Reminders',
+                remindOthers: 'Remind Others',
+                reminderFromMom: 'Mom reminds you: Time to drink water! 💧',
+                reminderFromDad: 'Dad reminds you: Remember to drink more water',
+                reminderFromFriend: 'Xiaoming reminds you: Let\'s drink water together!',
+                sendReminder: 'Send Reminder',
+                currentTemp: 'Current Temperature',
+                targetTemperature: 'Target Temperature',
+                temperatureHistory: 'Temperature History',
+                connected: 'Connected',
+                notConnected: 'Not Connected'
+            }
+        };
+
+        let currentLang = 'zh';
+        let currentTemp = 45;
+        let chart = null;
+
+        // 打开语言选择器
+        function openLanguageSelector() {
+            document.getElementById('languageModal').classList.add('active');
+        }
+
+        // 关闭语言选择器
+        function closeLanguageSelector() {
+            document.getElementById('languageModal').classList.remove('active');
+        }
+
+        // 设置语言
+        function setLanguage(lang) {
+            currentLang = lang;
+            
+            // 更新按钮显示
+            document.getElementById('langText').textContent = lang === 'zh' ? '中文' : 'English';
+            
+            // 更新选项选中状态
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // 更新界面语言
+            updateLanguage();
+            
+            // 关闭弹窗
+            setTimeout(() => {
+                closeLanguageSelector();
+            }, 300);
+        }
+
+        // 更新界面语言
+        function updateLanguage() {
+            const elements = document.querySelectorAll('[data-lang]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (i18n[currentLang][key]) {
+                    el.textContent = i18n[currentLang][key];
+                }
+            });
+
+            // 更新连接状态
+            const isConnected = document.getElementById('statusDot').classList.contains('connected');
+            document.getElementById('connectionText').textContent = isConnected ? 
+                i18n[currentLang].connected : i18n[currentLang].notConnected;
+
+            // 更新输入框placeholder
+            const inputs = document.querySelectorAll('.form-input');
+            inputs.forEach((input, index) => {
+                input.placeholder = index === 0 ? 
+                    (currentLang === 'zh' ? '选择联系人' : 'Select contact') :
+                    (currentLang === 'zh' ? '输入提醒内容' : 'Enter reminder content');
+            });
+
+            // 更新图表
+            if (chart) {
+                const activeTab = document.querySelector('.date-tab.active');
+                if (activeTab) {
+                    const date = activeTab.getAttribute('onclick')?.match(/'(.*?)'/)?.[1] || 'today';
+                    updateChartData(date);
+                }
+            }
+        }
+
+        // 显示页面
+        function showPage(pageId) {
+            document.getElementById('mainPage').style.display = 'none';
+            document.querySelectorAll('.page-container').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId + 'Page').classList.add('active');
+
+            if (pageId === 'curve' && !chart) {
+                initChart();
+            }
+        }
+
+        function showMain() {
+            document.querySelectorAll('.page-container').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById('mainPage').style.display = 'block';
+        }
+
+        // 模式设置
+        function showModeSettings() {
+            showPage('modeSettings');
+        }
+
+        // 扫码
+        function showScan() {
+            showPage('scan');
+        }
+
+        // 扫码结果
+        function showScanResult() {
+            alert('扫码成功！\n设备已连接');
+            document.getElementById('statusDot').classList.add('connected');
+            document.getElementById('connectionText').textContent = i18n[currentLang].connected;
+        }
+
+        // 日期选择
+        function selectDate(element, date) {
+            document.querySelectorAll('.date-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            element.classList.add('active');
+            updateChartData(date);
+        }
+
+        // 信息标签切换
+        function switchMessageTab(element, tab) {
+            document.querySelectorAll('.message-tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            if (tab === 'my') {
+                document.getElementById('myReminders').classList.remove('hidden');
+                document.getElementById('sendReminder').classList.add('hidden');
+            } else {
+                document.getElementById('myReminders').classList.add('hidden');
+                document.getElementById('sendReminder').classList.remove('hidden');
+            }
+        }
+
+        // 发送提醒
+        function sendReminder() {
+            alert('提醒已发送！');
+        }
+
+        // 温度调节
+        function changeTemp(delta) {
+            currentTemp += delta;
+            if (currentTemp < 20) currentTemp = 20;
+            if (currentTemp > 80) currentTemp = 80;
+            document.getElementById('currentTemp').textContent = currentTemp;
+        }
+
+        // 初始化图表
+        function initChart() {
+            chart = echarts.init(document.getElementById('drinkingChart'));
+            updateChartData('today');
+        }
+
+        // 更新图表数据
+        function updateChartData(date) {
+            // 不同日期的模拟数据
+            const datasets = {
+                today: {
+                    hours: ['8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+                    data: [50, 100, 150, 200, 250, 300, 250, 200]
+                },
+                yesterday: {
+                    hours: ['8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+                    data: [40, 90, 130, 170, 210, 260, 210, 160]
+                },
+                beforeYesterday: {
+                    hours: ['8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+                    data: [60, 110, 160, 210, 260, 310, 260, 210]
+                }
+            };
+
+            const data = datasets[date] || datasets.today;
+
+            const option = {
+                title: {
+                    text: currentLang === 'zh' ? '喝水时刻与余水量' : 'Drinking Time vs Water Level',
+                    left: 'center',
+                    textStyle: {
+                        fontSize: 14,
+                        color: '#2c3e50'
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.hours,
+                    axisLabel: {
+                        color: '#7f8c8d'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        formatter: '{value}ml',
+                        color: '#7f8c8d'
+                    }
+                },
+                series: [{
+                    name: currentLang === 'zh' ? '余水量' : 'Water Level',
+                    type: 'line',
+                    data: data.data,
+                    smooth: true,
+                    itemStyle: {
+                        color: '#4CAF50'
+                    },
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0,
+                            y: 0,
+                            x2: 0,
+                            y2: 1,
+                            colorStops: [{
+                                offset: 0,
+                                color: 'rgba(76, 175, 80, 0.3)'
+                            }, {
+                                offset: 1,
+                                color: 'rgba(76, 175, 80, 0.05)'
+                            }]
+                        }
+                    }
+                }]
+            };
+            
+            chart.setOption(option);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模拟连接状态
+            setTimeout(() => {
+                document.getElementById('statusDot').classList.add('connected');
+                document.getElementById('connectionText').textContent = i18n[currentLang].connected;
+            }, 2000);
+
+            // 响应窗口大小变化
+            window.addEventListener('resize', () => {
+                if (chart) {
+                    chart.resize();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
