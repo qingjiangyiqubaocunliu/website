@@ -26,9 +26,6 @@ This demonstration simulates the look and feel of a real mobile application, sho
 -   **Navigation Flow:** How a user would move between different screens.
 -   **Feature Highlighting:** Key functions of the Smart Cup (e.g., temperature control, hydration tracking).
 
-**Live Preview:**
-[👉 Click here to view the Interactive Demo](https://qingjiangyiqubacunliu.github.io/website/smart_cup_app.html)
-
 *(Note: This is a frontend demonstration. Actual data processing and hardware connection are not implemented.)*
 
 ---
