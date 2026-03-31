@@ -1079,6 +1079,209 @@
             font-weight: bold;
             color: #2c3e50;
         }
+
+        /* 温度页面样式 - 参考上传的极简UI风格 */
+        .temperature-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .temperature-circle {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 25px;
+            position: relative;
+            border-radius: 50%;
+            background: conic-gradient(from 180deg, #A0AEC0 0deg, #A0AEC0 180deg, #F687B3 180deg, #F687B3 360deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .temperature-circle::before {
+            content: '';
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: #ffffff;
+        }
+
+        .temperature-value {
+            position: relative;
+            z-index: 1;
+            font-size: 56px;
+            font-weight: bold;
+            color: #F687B3;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        .temperature-status {
+            color: #333333;
+            font-size: 18px;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .temperature-tips {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .temp-tip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .temp-tip.safe {
+            color: #4CAF50;
+        }
+
+        .temp-tip.warm {
+            color: #FFC107;
+        }
+
+        .temp-tip.hot {
+            color: #F687B3;
+        }
+
+        .temp-icon {
+            font-size: 18px;
+            font-weight: bold;
+            width: 20px;
+        }
+
+        .temp-text {
+            font-size: 14px;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            color: #666;
+        }
+
+        /* 聊天界面样式 */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+            min-height: 500px;
+            max-height: 600px;
+        }
+
+        .chat-message {
+            display: flex;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-message.received {
+            justify-content: flex-start;
+        }
+
+        .chat-message.sent {
+            justify-content: flex-end;
+        }
+
+        .chat-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            word-wrap: break-word;
+        }
+
+        .chat-message.received .chat-bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-message.sent .chat-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .chat-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .chat-send-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chat-send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .message-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .message-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -1210,16 +1413,6 @@
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="flashSwitch">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-left">
-                        <span>🔔</span>
-                        <span data-lang="ringtone">铃声</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="ringtoneSwitch" checked>
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -1358,20 +1551,20 @@
                 <div class="message-tab" onclick="switchMessageTab(this, 'send')" data-lang="remindOthers">提醒别人</div>
             </div>
             <div id="myReminders">
-                <div class="message-item">
+                <div class="message-item" onclick="openChat('mom', '妈妈', 'Mom')">
                     <div class="message-content">
                         <div class="message-text" data-lang="reminderFromMom">妈妈提醒你：该喝水啦！💧</div>
                         <div class="message-time">10分钟前</div>
                     </div>
                     <div class="message-unread"></div>
                 </div>
-                <div class="message-item">
+                <div class="message-item" onclick="openChat('dad', '爸爸', 'Dad')">
                     <div class="message-content">
                         <div class="message-text" data-lang="reminderFromDad">爸爸提醒你：记得多喝水</div>
                         <div class="message-time">1小时前</div>
                     </div>
                 </div>
-                <div class="message-item">
+                <div class="message-item" onclick="openChat('xiaoming', '小明', 'Xiaoming')">
                     <div class="message-content">
                         <div class="message-text" data-lang="reminderFromFriend">小明提醒你：一起喝水吧！</div>
                         <div class="message-time">2小时前</div>
@@ -1394,42 +1587,43 @@
                 <button class="back-button" onclick="showMain()">←</button>
                 <div class="page-title" data-lang="temperature">温度</div>
             </div>
-            <div class="card">
-                <div class="temperature-control">
-                    <div class="temp-display-large">
-                        <span id="currentTemp">45</span><span class="temp-display-unit">℃</span>
-                    </div>
-                    <div style="color: #666;" data-lang="currentTemp">当前水温</div>
-                    <div class="temp-controls">
-                        <button class="temp-button up" onclick="changeTemp(1)">+</button>
-                        <button class="temp-button down" onclick="changeTemp(-1)">-</button>
-                    </div>
+            
+            <!-- 水温提示界面 -->
+            <div class="temperature-card">
+                <div class="temperature-circle">
+                    <div class="temperature-value">45℃</div>
                 </div>
-                <div class="target-temp">
-                    <div class="target-temp-label" data-lang="targetTemperature">目标温度</div>
-                    <div class="target-temp-value">45℃</div>
+                <div class="temperature-status" data-lang="warmAndSuitable">温热适宜</div>
+                
+                <div class="temperature-tips">
+                    <div class="temp-tip safe">
+                        <span class="temp-icon">✓</span>
+                        <span class="temp-text" data-lang="safeRange">35-50℃ 适宜饮用</span>
+                    </div>
+                    <div class="temp-tip warm">
+                        <span class="temp-icon">⚡</span>
+                        <span class="temp-text" data-lang="warmRange">50-65℃ 温热稍烫</span>
+                    </div>
+                    <div class="temp-tip hot">
+                        <span class="temp-icon">×</span>
+                        <span class="temp-text" data-lang="hotRange">65℃以上 小心烫伤</span>
+                    </div>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-title" data-lang="temperatureHistory">温度历史</div>
-                <div class="setting-item">
-                    <div class="setting-left">
-                        <span>08:00</span>
-                    </div>
-                    <div style="color: #ff6b9d; font-weight: bold;">42℃</div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-left">
-                        <span>12:00</span>
-                    </div>
-                    <div style="color: #ff6b9d; font-weight: bold;">45℃</div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-left">
-                        <span>15:00</span>
-                    </div>
-                    <div style="color: #ff6b9d; font-weight: bold;">48℃</div>
-                </div>
+        </div>
+
+        <!-- 聊天界面 -->
+        <div id="chatPage" class="page-container">
+            <div class="page-header">
+                <button class="back-button" onclick="closeChat()">←</button>
+                <div class="page-title" id="chatTitle">聊天</div>
+            </div>
+            <div id="chatMessages" class="chat-messages">
+                <!-- 聊天消息动态生成 -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" class="chat-input" placeholder="输入消息..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button class="chat-send-btn" onclick="sendMessage()" data-lang="send">发送</button>
             </div>
         </div>
     </div>
@@ -1485,7 +1679,14 @@
                 targetTemperature: '目标温度',
                 temperatureHistory: '温度历史',
                 connected: '已连接',
-                notConnected: '未连接'
+                notConnected: '未连接',
+                warmAndSuitable: '温热适宜',
+                safeRange: '35-50℃ 适宜饮用',
+                warmRange: '50-65℃ 温热稍烫',
+                hotRange: '65℃以上 小心烫伤',
+                send: '发送',
+                chatWith: '与',
+                chatting: '聊天'
             },
             en: {
                 waterData: 'Drinking Data',
@@ -1537,13 +1738,48 @@
                 targetTemperature: 'Target Temperature',
                 temperatureHistory: 'Temperature History',
                 connected: 'Connected',
-                notConnected: 'Not Connected'
+                notConnected: 'Not Connected',
+                warmAndSuitable: 'Warm and Suitable',
+                safeRange: '35-50°C Safe to Drink',
+                warmRange: '50-65°C Slightly Hot',
+                hotRange: 'Above 65°C Careful: Scalding',
+                send: 'Send',
+                chatWith: 'Chat with',
+                chatting: 'Chatting'
             }
         };
 
         let currentLang = 'zh';
         let currentTemp = 45;
         let chart = null;
+        let currentChatUser = null;
+        let currentChatName = '';
+        let chatHistory = {
+            mom: {
+                zh: [
+                    { type: 'received', text: '该喝水啦！💧', time: '10分钟前' }
+                ],
+                en: [
+                    { type: 'received', text: 'Time to drink water! 💧', time: '10 mins ago' }
+                ]
+            },
+            dad: {
+                zh: [
+                    { type: 'received', text: '记得多喝水', time: '1小时前' }
+                ],
+                en: [
+                    { type: 'received', text: 'Remember to drink more water', time: '1 hour ago' }
+                ]
+            },
+            xiaoming: {
+                zh: [
+                    { type: 'received', text: '一起喝水吧！', time: '2小时前' }
+                ],
+                en: [
+                    { type: 'received', text: 'Let\'s drink water together!', time: '2 hours ago' }
+                ]
+            }
+        };
 
         // 打开语言选择器
         function openLanguageSelector() {
@@ -1599,6 +1835,12 @@
                     (currentLang === 'zh' ? '选择联系人' : 'Select contact') :
                     (currentLang === 'zh' ? '输入提醒内容' : 'Enter reminder content');
             });
+
+            // 更新聊天输入框placeholder
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.placeholder = currentLang === 'zh' ? '输入消息...' : 'Type a message...';
+            }
 
             // 更新图表
             if (chart) {
@@ -1683,6 +1925,126 @@
             if (currentTemp < 20) currentTemp = 20;
             if (currentTemp > 80) currentTemp = 80;
             document.getElementById('currentTemp').textContent = currentTemp;
+        }
+
+        // 打开聊天界面
+        function openChat(userId, userName, userNameEn) {
+            currentChatUser = userId;
+            currentChatName = currentLang === 'zh' ? userName : userNameEn;
+            
+            // 更新聊天标题
+            document.getElementById('chatTitle').textContent = 
+                currentLang === 'zh' ? `与${currentChatName}聊天` : `Chat with ${currentChatName}`;
+            
+            // 隐藏主页面和当前页面
+            document.getElementById('mainPage').style.display = 'none';
+            document.querySelectorAll('.page-container').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 显示聊天页面
+            document.getElementById('chatPage').classList.add('active');
+            
+            // 加载聊天记录
+            loadChatHistory();
+            
+            // 清除未读标记
+            const unreadDot = document.querySelector(`.message-item[onclick*="${userId}"] .message-unread`);
+            if (unreadDot) {
+                unreadDot.remove();
+            }
+        }
+
+        // 关闭聊天界面
+        function closeChat() {
+            document.getElementById('chatPage').classList.remove('active');
+            document.getElementById('messagePage').classList.add('active');
+            currentChatUser = null;
+            currentChatName = '';
+        }
+
+        // 加载聊天记录
+        function loadChatHistory() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+            
+            const messages = chatHistory[currentChatUser]?.[currentLang] || [];
+            messages.forEach(msg => {
+                addMessageToUI(msg.type, msg.text, msg.time);
+            });
+            
+            // 滚动到底部
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 添加消息到界面
+        function addMessageToUI(type, text, time) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+            messageDiv.innerHTML = `
+                <div>
+                    <div class="chat-bubble">${text}</div>
+                    <div class="chat-time">${time}</div>
+                </div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 发送消息
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            const now = new Date();
+            const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            // 添加到历史记录
+            if (!chatHistory[currentChatUser]) {
+                chatHistory[currentChatUser] = { zh: [], en: [] };
+            }
+            if (!chatHistory[currentChatUser][currentLang]) {
+                chatHistory[currentChatUser][currentLang] = [];
+            }
+            chatHistory[currentChatUser][currentLang].push({
+                type: 'sent',
+                text: text,
+                time: time
+            });
+            
+            // 添加到界面
+            addMessageToUI('sent', text, time);
+            
+            // 清空输入框
+            input.value = '';
+            
+            // 模拟对方回复（对方回应我发的内容）
+            setTimeout(() => {
+                const replies = {
+                    zh: [
+                        '好的，记得多喝水哦！',
+                        '加油！💪',
+                        '一起努力~',
+                        '收到啦！'
+                    ],
+                    en: [
+                        'Okay, remember to drink more water!',
+                        'Keep it up! 💪',
+                        'Let\'s do this together~',
+                        'Got it!'
+                    ]
+                };
+                const randomReply = replies[currentLang][Math.floor(Math.random() * replies[currentLang].length)];
+                chatHistory[currentChatUser][currentLang].push({
+                    type: 'received',
+                    text: randomReply,
+                    time: time
+                });
+                addMessageToUI('received', randomReply, time);
+            }, 1000);
         }
 
         // 初始化图表
